@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Michelle 的德瑞雙語閃卡</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-group { margin-bottom: 20px; }
+        .lang-btn { padding: 10px; cursor: pointer; border: none; border-radius: 5px; margin: 5px; font-weight: bold; }
+        .btn-de { background-color: #FFCE00; color: black; }
+        .btn-sv { background-color: #006AA7; color: white; }
+        #card { border: 2px solid #ddd; padding: 30px; margin: 20px 0; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 15px; cursor: pointer; background-color: #fff; }
+        #card:active { background-color: #f0f0f0; }
+        .word { 
+            font-size: 26px; 
+            font-weight: bold; 
+            color: #333;
+            word-wrap: break-word; 
+            line-height: 1.4;      
+        }
+        .translation { font-size: 20px; color: #007bff; margin-top: 15px; display: none; }
+        .control-btns button { padding: 12px 20px; font-size: 16px; margin: 5px; border-radius: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+        .speak-btn { background-color: #28a745 !important; color: white !important; border: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>語言學習閃卡</h2>
+    
+    <div class="btn-group">
+        <button class="lang-btn btn-de" onclick="filterLang('de')">德文練習 (DE)</button>
+        <button class="lang-btn btn-sv" onclick="filterLang('sv')">瑞典文練習 (SV)</button>
+    </div>
+
+    <div id="card" onclick="showTranslation()">
+        <div id="lang-label" style="font-size: 12px; margin-bottom: 10px; color: #888;">請選擇語言</div>
+        <div class="word" id="wordText">點擊上方按鈕開始</div>
+        <div class="translation" id="translationText"></div>
+    </div>
+
+    <div class="control-btns">
+        <button class="speak-btn" onclick="speak(event)">🔊 發音</button>
+        <button onclick="showTranslation()">👁️ 顯示翻譯</button>
+        <br>
+        <button onclick="prevCard()">⬅️ 上一個</button>
+        <button onclick="nextCard()">➡️ 下一個</button>
+    </div>
+</div>
+
+<script>
+    const allData = [
+        {lang:'de', word:'Hallo', trans:'你好'},
+        {lang:'de', word:'Wie geht es dir?', trans:'你好嗎？'},
+        {lang:'de', word:'Ich heiße Michelle', trans:'我叫 Michelle'},
+        {lang:'de', word:'Ich bin Verkäuferin', trans:'我是業務員 (女性限定)'},
+        {lang:'de', word:'Ich komme aus Taiwan', trans:'我來自台灣'},
+        {lang:'de', word:'Ich wohne in Taoyuan', trans:'我住在桃園'},
+        {lang:'de', word:'Ich lese gerne Bücher', trans:'我喜歡讀書'},
+        {lang:'de', word:'Meine Telefonnummer ist', trans:'我的電話號碼是'},
+        {lang:'de', word:'null', trans:'0'}, {lang:'de', word:'eins', trans:'1'},
+        {lang:'de', word:'zwei', trans:'2'}, {lang:'de', word:'drei', trans:'3'},
+        {lang:'de', word:'vier', trans:'4'}, {lang:'de', word:'fünf', trans:'5'},
+        {lang:'de', word:'sechs', trans:'6'}, {lang:'de', word:'sieben', trans:'7'},
+        {lang:'de', word:'acht', trans:'8'}, {lang:'de', word:'neun', trans:'9'},
+        {lang:'de', word:'zehn', trans:'10'},
+        {lang:'de', word:'Tschüss', trans:'再見'},
+        {lang:'de', word:'Guten Morgen', trans:'早安'},
+        {lang:'de', word:'Guten Tag', trans:'午安'},
+        {lang:'de', word:'Guten Abend', trans:'晚安'},
+        {lang:'de', word:'Gute Nacht', trans:'晚安 (睡前)'},
+        {lang:'de', word:'Danke', trans:'謝謝'},
+        {lang:'de', word:'Bitte', trans:'不客氣/請'},
+        {lang:'de', word:'Es tut mir leid', trans:'對不起'},
+        {lang:'de', word:'Kein Problem', trans:'沒關係/沒問題'},
+        {lang:'de', word:'Noch einmal bitte', trans:'請再重複一次'},
+        {lang:'de', word:'Langsam bitte', trans:'請慢一點'},
+        {lang:'de', word:'Ich verstehe nicht', trans:'我不懂'},
+        {lang:'de', word:'Ich habe Zeit', trans:'我有空'},
+        {lang:'de', word:'Ich bin traurig', trans:'我很傷心'},
+        {lang:'de', word:'Ich bin glücklich', trans:'我很開心'},
+        {lang:'de', word:'Mir geht es sehr gut', trans:'我很好'},
+        {lang:'de', word:'Hast du Zeit?', trans:'你有空嗎？'},
+        {lang:'de', word:'Bist du glücklich?', trans:'你開心嗎？'},
+        {lang:'de', word:'Du bist gut aussehend', trans:'你很帥'},
+        {lang:'de', word:'Du bist intelligent', trans:'你很聰明'},
+        {lang:'de', word:'Alles gut?', trans:'一切都好嗎？'},
+        {lang:'de', word:'Das mag ich', trans:'我喜歡這個'},
+        {lang:'sv', word:'Hej', trans:'你好'},
+        {lang:'sv', word:'Hur mår du?', trans:'你好嗎？'},
+        {lang:'sv', word:'Jag heter Michelle', trans:'我叫 Michelle'},
+        {lang:'sv', word:'Jag är säljare', trans:'我是業務員'},
+        {lang:'sv', word:'Jag kommer från Taiwan', trans:'我來自台灣'},
+        {lang:'sv', word:'Jag bor i Taoyuan', trans:'我住在桃園'},
+        {lang:'sv', word:'Jag gillar att läsa böcker', trans:'我喜歡讀書'},
+        {lang:'sv', word:'Mitt telefonnummer är', trans:'我的電話號碼是'},
+        {lang:'sv', word:'noll', trans:'0'}, {lang:'sv', word:'ett', trans:'1'},
+        {lang:'sv', word:'två', trans:'2'}, {lang:'sv', word:'tre', trans:'3'},
+        {lang:'sv', word:'fyra', trans:'4'}, {lang:'sv', word:'fem', trans:'5'},
+        {lang:'sv', word:'sex', trans:'6'}, {lang:'sv', word:'sju', trans:'7'},
+        {lang:'sv', word:'åtta', trans:'8'}, {lang:'sv', word:'nio', trans:'9'},
+        {lang:'sv', word:'tio', trans:'10'},
+        {lang:'sv', word:'Hejdå', trans:'再見'},
+        {lang:'sv', word:'God morgon', trans:'早安'},
+        {lang:'sv', word:'God dag', trans:'午安'},
+        {lang:'sv', word:'God kväll', trans:'晚安'},
+        {lang:'sv', word:'God natt', trans:'晚安 (睡前)'},
+        {lang:'sv', word:'Tack', trans:'謝謝'},
+        {lang:'sv', word:'Var så god', trans:'不客氣'},
+        {lang:'sv', word:'Förlåt', trans:'對不起'},
+        {lang:'sv', word:'Det spelar ingen roll', trans:'沒關係'},
+        {lang:'sv', word:'En gång till tack', trans:'請再重複一次'},
+        {lang:'sv', word:'Långsammare tack', trans:'請慢一點'},
+        {lang:'sv', word:'Jag förstår inte', trans:'我不懂'},
+        {lang:'sv', word:'Jag är ledig', trans:'我有空'},
+        {lang:'sv', word:'Jag är ledsen', trans:'我很傷心/抱歉'},
+        {lang:'sv', word:'Jag är glad', trans:'我很開心'},
+        {lang:'sv', word:'Jag mår jättebra', trans:'我很好'},
+        {lang:'sv', word:'Är du ledig?', trans:'你有空嗎？'},
+        {lang:'sv', word:'Är du glad?', trans:'你開心嗎？'},
+        {lang:'sv', word:'Du är stilig', trans:'你很帥'},
+        {lang:'sv', word:'Du är intelligent', trans:'你很聰明'},
+        {lang:'sv', word:'Allt bra?', trans:'一切都好嗎？'},
+        {lang:'sv', word:'Jag gillar det', trans:'我喜歡這個'}
+    ];
+
+    let currentCards = [];
+    let currentIndex = 0;
+
+    function filterLang(lang) {
+        currentCards = allData.filter(item => item.lang === lang);
+        currentIndex = 0;
+        updateCard();
+    }
+
+    function updateCard() {
+        if (currentCards.length === 0) return;
+        const current = currentCards[currentIndex];
+        document.getElementById('lang-label').innerText = current.lang === 'de' ? '🇩🇪 德文模式' : '🇸🇪 瑞典文模式';
+        document.getElementById('wordText').innerText = current.word;
+        document.getElementById('translationText').innerText = current.trans;
+        document.getElementById('translationText').style.display = 'none';
+    }
+
+    function showTranslation() {
+        document.getElementById('translationText').style.display = 'block';
+    }
+
+    function nextCard() {
+        if (currentCards.length === 0) return;
+        currentIndex = (currentIndex + 1) % currentCards.length;
+        updateCard();
+    }
+
+    function prevCard() {
+        if (currentCards.length === 0) return;
+        currentIndex = (currentIndex - 1 + currentCards.length) % currentCards.length;
+        updateCard();
+    }
+
+   function speak(event) {
+        if (event) event.stopPropagation();
+        if (currentCards.length === 0) return;
+        const current = currentCards[currentIndex];
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = current.word;
+        
+        const targetLang = current.lang === 'de' ? 'de-DE' : 'sv-SE';
+        msg.lang = targetLang;
+
+        // --- 強制搜尋高品質聲音開始 ---
+        const voices = window.speechSynthesis.getVoices();
+        
+        // 優先找 Windows 內建的高品質人聲 (通常名字會有 Microsoft)
+        let selectedVoice = voices.find(v => 
+            v.lang.includes(targetLang) && v.name.includes('Microsoft')
+        );
+
+        // 如果找不到 Microsoft 的，就找任何符合語言的
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.includes(targetLang));
+        }
+
+        if (selectedVoice) {
+            msg.voice = selectedVoice;
+            console.log("正在使用聲音: " + selectedVoice.name); // 可以在開發者工具看到是誰在說話
+        }
+        // --- 強制搜尋高品質聲音結束 ---
+
+        msg.rate = 0.8; 
+        msg.pitch = 1;
+        
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(msg);
+    }
+</script>
+</body>
+</html>
